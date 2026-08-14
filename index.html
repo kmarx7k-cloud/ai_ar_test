@@ -791,12 +791,10 @@
     }
 
     .ar-toggle{
-      position:absolute;
-      left:20px;
-      right:20px;
-      bottom:220px;
+      position:relative;
+      margin:0 0 10px;
+      height:38px;
       z-index:10;
-      height:44px;
     }
     .ar-toggle-track{
       position:absolute;
@@ -804,59 +802,39 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding:0 24px;
-      height:36px;
-      border-radius:18px;
-      background:rgba(255,255,255,.92);
-      backdrop-filter:blur(8px);
-      box-shadow:var(--shadow-soft);
+      padding:0 20px;
+      height:38px;
+      border-radius:12px;
+      background:var(--soft);
+      border:1px solid var(--border);
     }
     .ar-toggle-label{
       font-size:11px;
       font-weight:700;
       color:var(--muted);
       z-index:1;
+      transition:color .2s ease;
+    }
+    .ar-toggle-label.active{
+      color:#151613;
     }
     .ar-toggle-thumb{
       position:absolute;
-      top:4px;
-      left:4px;
-      width:36px;
-      height:36px;
-      border-radius:50%;
+      top:3px;
+      left:3px;
+      width:32px;
+      height:32px;
+      border-radius:10px;
       background:#151613;
       box-shadow:var(--shadow-soft);
       display:grid;
       place-items:center;
       color:var(--accent);
-      font-size:14px;
-      transition:left .3s cubic-bezier(.25,.46,.45,.94);
+      font-size:13px;
+      transition:left .3s cubic-bezier(.25,.46,.45,.94), width .3s ease;
       z-index:2;
     }
     .ar-toggle-thumb::before{content:"\25B6"}
-
-    .ar-shutter{
-      position:absolute;
-      left:50%;
-      bottom:150px;
-      transform:translateX(-50%);
-      z-index:10;
-    }
-    .shutter-ring{
-      width:56px;
-      height:56px;
-      border:3px solid rgba(255,255,255,.9);
-      border-radius:50%;
-      display:grid;
-      place-items:center;
-    }
-    .shutter-core{
-      width:40px;
-      height:40px;
-      border:2px solid #fff;
-      border-radius:50%;
-      background:transparent;
-    }
 
     .ar-ai-assist{
       position:absolute;
@@ -1022,26 +1000,20 @@
                 </div>
                 <div class="ar-past" id="ar-past">
                   <img src="images/img_seochon_bluehouse_walk.png" id="ar-past-img" alt="과거 모습" />
-                  <div class="ghost" style="left:54px; right:54px; bottom:280px; height:128px;"></div>
+                  <div class="ghost" style="left:54px; right:54px; bottom:220px; height:128px;"></div>
                   <div class="past-label">복원된 모습</div>
                 </div>
-              </div>
-
-              <div class="ar-toggle" id="ar-toggle" role="slider" aria-label="현재/복원 전환" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
-                <div class="ar-toggle-track">
-                  <span class="ar-toggle-label">현재</span>
-                  <span class="ar-toggle-label">복원</span>
-                </div>
-                <div class="ar-toggle-thumb" id="ar-toggle-thumb"></div>
-              </div>
-
-              <div class="ar-shutter" id="ar-shutter" aria-label="촬영">
-                <div class="shutter-ring"></div>
-                <div class="shutter-core"></div>
               </div>
             </div>
 
             <div class="ai-assist ar-ai-assist" id="ar-ai-assist">
+              <div class="ar-toggle" id="ar-toggle" role="slider" aria-label="현재/복원 전환" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                <div class="ar-toggle-track">
+                  <span class="ar-toggle-label" data-role="label-current">현재</span>
+                  <span class="ar-toggle-label" data-role="label-past">복원</span>
+                </div>
+                <div class="ar-toggle-thumb" id="ar-toggle-thumb"></div>
+              </div>
               <div class="ai-row">
                 <div class="avatar">🧭</div>
                 <div>
@@ -1197,26 +1169,20 @@
                 </div>
                 <div class="ar-past" id="ar-past-2">
                   <img src="images/img_hanyangdoseong_naksan.jpg" id="ar-past-img-2" alt="복원 모습" />
-                  <div class="ghost" style="left:54px; right:54px; bottom:280px; height:128px;"></div>
+                  <div class="ghost" style="left:54px; right:54px; bottom:220px; height:128px;"></div>
                   <div class="past-label">복원된 돈의문</div>
                 </div>
-              </div>
-
-              <div class="ar-toggle" id="ar-toggle-2" role="slider" aria-label="현재/복원 전환" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
-                <div class="ar-toggle-track">
-                  <span class="ar-toggle-label">현재</span>
-                  <span class="ar-toggle-label">복원</span>
-                </div>
-                <div class="ar-toggle-thumb" id="ar-toggle-thumb-2"></div>
-              </div>
-
-              <div class="ar-shutter" id="ar-shutter-2" aria-label="촬영">
-                <div class="shutter-ring"></div>
-                <div class="shutter-core"></div>
               </div>
             </div>
 
             <div class="ai-assist ar-ai-assist" id="ar-ai-assist-2">
+              <div class="ar-toggle" id="ar-toggle-2" role="slider" aria-label="현재/복원 전환" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                <div class="ar-toggle-track">
+                  <span class="ar-toggle-label" data-role="label-current">현재</span>
+                  <span class="ar-toggle-label" data-role="label-past">복원</span>
+                </div>
+                <div class="ar-toggle-thumb" id="ar-toggle-thumb-2"></div>
+              </div>
               <div class="ai-row">
                 <div class="avatar">🧭</div>
                 <div>
@@ -1322,7 +1288,6 @@
       const thumb = document.getElementById(scope.thumb);
       const currentView = document.getElementById(scope.currentView);
       const pastView = document.getElementById(scope.pastView);
-      const shutter = document.getElementById(scope.shutter);
       const btnBack = document.getElementById(scope.btnBack);
 
       let isPast = false;
@@ -1330,6 +1295,11 @@
 
       function setView(past) {
         isPast = past;
+        // 라벨 상태 토글
+        toggle.querySelectorAll("[data-role]").forEach((label) => {
+          const isCurrent = label.getAttribute("data-role") === "label-current";
+          label.classList.toggle("active", past ? !isCurrent : isCurrent);
+        });
         if (past) {
           currentView.style.opacity = "0";
           currentView.style.transform = "translateX(-20px)";
@@ -1337,7 +1307,7 @@
           pastView.style.opacity = "1";
           pastView.style.transform = "translateX(0)";
           pastView.style.pointerEvents = "auto";
-          thumb.style.left = "calc(100% - 40px)";
+          thumb.style.left = "calc(100% - 35px)";
           toggle.setAttribute("aria-valuenow", "100");
         } else {
           currentView.style.opacity = "1";
@@ -1346,7 +1316,7 @@
           pastView.style.opacity = "0";
           pastView.style.transform = "translateX(20px)";
           pastView.style.pointerEvents = "none";
-          thumb.style.left = "4px";
+          thumb.style.left = "3px";
           toggle.setAttribute("aria-valuenow", "0");
         }
       }
@@ -1392,13 +1362,19 @@
           const rect = toggle.getBoundingClientRect();
           const x = (e.clientX || e.touches?.[0]?.clientX || 0) - rect.left;
           const pct = Math.max(0, Math.min(1, x / rect.width));
-          thumb.style.left = `calc(${pct * 100}% - 18px)`;
+          thumb.style.left = `calc(${pct * 100}% - 16px)`;
           if (pct > 0.5 && !isPast) setView(true);
           else if (pct <= 0.5 && isPast) setView(false);
         });
         window.addEventListener("pointerup", () => { isDragging = false; });
       }
-      if (shutter) shutter.addEventListener("click", () => alert("촬영 기능은 데모에서 생략되었습니다."));
+      // 라벨 클릭 시 해당 상태로 직접 전환
+      toggle.querySelectorAll("[data-role]").forEach((label) => {
+        label.addEventListener("click", () => {
+          const toPast = label.getAttribute("data-role") === "label-past";
+          setView(toPast);
+        });
+      });
 
       setView(false);
       return { openAr };
@@ -1541,7 +1517,6 @@
       thumb: "ar-toggle-thumb",
       currentView: "ar-current",
       pastView: "ar-past",
-      shutter: "ar-shutter",
       chip: "ar-chip-label",
       curImg: "ar-current-img",
       pastImg: "ar-past-img",
@@ -1559,7 +1534,6 @@
       thumb: "ar-toggle-thumb-2",
       currentView: "ar-current-2",
       pastView: "ar-past-2",
-      shutter: "ar-shutter-2",
       chip: "ar-chip-label-2",
       curImg: "ar-current-img-2",
       pastImg: "ar-past-img-2",
