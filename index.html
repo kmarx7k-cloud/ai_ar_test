@@ -794,12 +794,12 @@
     .ar-toggle{
       position:relative;
       margin:0 0 10px;
-      height:44px;
+      height:40px;
       z-index:10;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding:0 8px;
+      padding:0 10px;
       background:#fafafa;
       border:1px solid var(--border);
       border-radius:12px;
@@ -810,7 +810,7 @@
       font-size:11px;
       font-weight:700;
       color:var(--muted);
-      padding:4px 6px;
+      padding:5px 6px;
       cursor:pointer;
       user-select:none;
       transition:color .2s ease;
@@ -821,8 +821,8 @@
     }
     .ar-toggle-track{
       position:absolute;
-      left:52px;
-      right:52px;
+      left:56px;
+      right:56px;
       top:50%;
       height:2px;
       margin-top:-1px;
@@ -834,10 +834,10 @@
       position:absolute;
       top:50%;
       left:0px;
-      width:30px;
-      height:30px;
-      margin-top:-15px;
-      margin-left:-15px;
+      width:20px;
+      height:20px;
+      margin-top:-10px;
+      margin-left:-10px;
       z-index:3;
       display:grid;
       place-items:center;
@@ -854,7 +854,7 @@
       transition:none;
     }
     .ar-toggle-thumb .arrow{
-      font-size:11px;
+      font-size:8px;
       line-height:1;
       pointer-events:none;
     }
@@ -1324,7 +1324,7 @@
       function setThumb(pct) {
         const track = toggle.querySelector(".ar-toggle-track");
         const tw = track.getBoundingClientRect().width;
-        const left = 52 + pct * tw;
+        const left = 56 + pct * tw;
         thumb.style.left = left + "px";
       }
 
