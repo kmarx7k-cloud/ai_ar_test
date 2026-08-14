@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>HistoTrip — 서촌 AR 데모 (제공형 · 복원형)</title>
+  <style>
+    :root{
+      --text:#151613;
+      --muted:#7c807b;
+      --sub:#9e9f9c;
+      --surface:#ffffff;
+      --soft:#f3f4f5;
+      --border:#e2e2e2;
+      --accent:#99f950;
+      --shadow:0 10px 24px rgba(28,28,30,.12);
+      --shadow-soft:0 8px 20px rgba(28,28,30,.07);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:#ececec;
+      color:var(--text);
+      font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+
+    button,input{font:inherit}
+    button{cursor:pointer}
+
+    .page{
+      width:min(100%,1100px);
+      margin:0 auto;
+      padding:28px 18px 64px;
+    }
+
+    .intro{
+      text-align:center;
+      margin-bottom:24px;
+    }
+    .intro h1{
+      margin:0 0 8px;
+      font-size:28px;
+      letter-spacing:-.9px;
+    }
+    .intro p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .compare{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:28px;
+      align-items:start;
+    }
+
+    .concept h2{
+      margin:0 0 6px;
+      font-size:19px;
+      letter-spacing:-.3px;
+    }
+    .concept-desc{
+      margin:0 0 12px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.6;
+    }
+
+    .phone{
+      width:390px;
+      max-width:100%;
+      height:844px;
+      margin:0 auto;
+      position:relative;
+      overflow:hidden;
+      border-radius:28px;
+      background:#fff;
+      box-shadow:var(--shadow);
+    }
+
+    /* 데모 폰을 브라우저 화면 높이에 맞춰 축소 — 모든 화면(특히 AR 카메라 하단 AI 설명)이
+       스크롤 없이 한눈에 보이도록 함. 창이 충분히 크면 원본 크기 유지 */
+    @media (max-height: 1050px){
+      .page{padding-top:16px; padding-bottom:20px;}
+      .intro{margin-bottom:14px;}
+      .intro h1{font-size:22px;}
+      .intro p{font-size:12px;}
+      .phone{
+        --fit:min(1, calc((100vh - 170px) / 844px));
+        transform:scale(var(--fit));
+        transform-origin:top center;
+        margin-bottom:calc(-1 * 844px * (1 - var(--fit)));
+      }
+    }
+
+    .screen{
+      height:100%;
+      overflow-y:auto;
+      padding-bottom:104px;
+      scrollbar-width:none;
+    }
+    .screen::-webkit-scrollbar{display:none}
+
+    .hero{
+      padding:50px 20px 18px;
+      text-align:center;
+      background:linear-gradient(#f4ffe9,#fff 88%);
+    }
+    .kicker{
+      margin-bottom:9px;
+      font-size:11px;
+      font-weight:800;
+      color:#4c8b39;
+    }
+    .hero h3{
+      margin:0 0 10px;
+      font-size:28px;
+      line-height:1.14;
+      letter-spacing:-1px;
+    }
+    .hero p{
+      margin:0;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.55;
+    }
+
+    .search{
+      height:50px;
+      margin:8px 20px 0;
+      display:flex;
+      align-items:center;
+      gap:9px;
+      padding:0 14px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#fff;
+      box-shadow:0 8px 22px rgba(28,28,30,.07);
+    }
+    .search input{
+      flex:1;
+      min-width:0;
+      border:0;
+      outline:0;
+      font-size:12px;
+      background:transparent;
+    }
+
+    .chips{
+      display:flex;
+      gap:8px;
+      padding:14px 20px 4px;
+      overflow-x:auto;
+      scrollbar-width:none;
+    }
+    .chips::-webkit-scrollbar{display:none}
+    .chip{
+      flex:none;
+      padding:8px 13px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:#fff;
+      font-size:11px;
+      font-weight:700;
+    }
+    .chip.active{
+      background:#151613;
+      border-color:#151613;
+      color:#fff;
+    }
+
+    .section{
+      padding:0 20px;
+      margin-top:26px;
+    }
+    .sec-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .sec-head h4{
+      margin:0;
+      font-size:18px;
+      letter-spacing:-.3px;
+    }
+    .sec-head span{
+      color:var(--muted);
+      font-size:10px;
+      white-space:nowrap;
+    }
+
+    .wheel-carousel{
+      display:flex;
+      gap:12px;
+      overflow-x:auto;
+      scroll-snap-type:x mandatory;
+      scrollbar-width:none;
+      overscroll-behavior-inline:contain;
+      padding:2px 1px 8px;
+    }
+    .wheel-carousel::-webkit-scrollbar{display:none}
+
+    .place-card{
+      flex:0 0 78%;
+      overflow:hidden;
+      scroll-snap-align:start;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:#fff;
+      box-shadow:var(--shadow-soft);
+    }
+    .place-card[data-ar-place]{
+      cursor:pointer;
+      transition:transform .18s ease, box-shadow .18s ease;
+    }
+    .place-card[data-ar-place]:hover{
+      transform:translateY(-3px);
+      box-shadow:var(--shadow);
+    }
+    .place-card[data-ar-place]:focus-visible{
+      outline:2px solid var(--accent);
+      outline-offset:2px;
+    }
+    .badge.lime{cursor:pointer}
+    .place-image{
+      height:150px;
+      background-size:cover;
+      background-position:center;
+    }
+    .place-info{
+      padding:13px;
+    }
+    .place-info small{
+      color:var(--muted);
+      font-size:10px;
+    }
+    .place-info b{
+      display:block;
+      margin:6px 0;
+      font-size:14px;
+      line-height:1.4;
+    }
+    .place-info p{
+      margin:0 0 9px;
+      color:var(--muted);
+      font-size:10.5px;
+      line-height:1.45;
+    }
+
+    .badges{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    .badge{
+      padding:5px 7px;
+      border-radius:999px;
+      background:#f3f4f5;
+      font-size:10px;
+      font-weight:700;
+    }
+    .badge.dark{
+      background:#151613;
+      color:#fff;
+    }
+    .badge.lime{
+      background:#151613;
+      color:#99f950;
+    }
+    .badge.blue{
+      background:#e8f0ff;
+      color:#1a56b0;
+    }
+
+    .quick{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:9px;
+    }
+    .q{
+      overflow:hidden;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#fff;
+    }
+    .qimg{
+      height:92px;
+      background-size:cover;
+      background-position:center;
+    }
+    .qbody{
+      padding:12px;
+    }
+    .q b{font-size:13px}
+    .q p{
+      margin:5px 0 0;
+      color:var(--muted);
+      font-size:10px;
+      line-height:1.45;
+    }
+
+    .ar-hero{
+      height:300px;
+      margin:0 20px;
+      overflow:hidden;
+      position:relative;
+      border-radius:20px;
+      background-size:cover;
+      background-position:center;
+      cursor:pointer;
+      transition:transform .18s ease, box-shadow .18s ease;
+    }
+    .ar-hero:hover{
+      transform:translateY(-3px);
+      box-shadow:var(--shadow);
+    }
+    .ar-hero:focus-visible{
+      outline:2px solid var(--accent);
+      outline-offset:2px;
+    }
+    .ar-hero::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(rgba(0,0,0,.06),rgba(0,0,0,.43));
+    }
+    .ar-chip{
+      position:absolute;
+      z-index:2;
+      left:14px;
+      top:14px;
+      padding:7px 9px;
+      border-radius:999px;
+      background:rgba(0,0,0,.64);
+      color:#fff;
+      font-size:10px;
+    }
+    .ghost{
+      position:absolute;
+      z-index:2;
+      left:54px;
+      right:54px;
+      bottom:70px;
+      height:128px;
+      border:3px solid rgba(255,255,255,.9);
+      border-top:20px solid rgba(255,255,255,.56);
+      box-shadow:0 0 24px rgba(255,255,255,.22);
+    }
+    .ar-copy{
+      position:absolute;
+      z-index:3;
+      left:15px;
+      right:15px;
+      bottom:14px;
+      color:#fff;
+    }
+    .ar-copy b{font-size:17px}
+    .ar-copy p{
+      margin:5px 0 0;
+      color:#eee;
+      font-size:10px;
+      line-height:1.45;
+    }
+
+    .ai-assist{
+      margin:12px 20px 0;
+      padding:15px;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:#fff;
+    }
+    .ai-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .avatar{
+      width:42px;
+      height:42px;
+      display:grid;
+      place-items:center;
+      border-radius:50%;
+      background:#d9ffbf;
+    }
+    .ai-row b{font-size:13px}
+    .ai-row small{
+      display:block;
+      margin-top:2px;
+      color:var(--muted);
+      font-size:10px;
+    }
+    .ai-assist p{
+      color:#555;
+      font-size:11px;
+      line-height:1.6;
+    }
+    .ask{
+      width:100%;
+      height:48px;
+      padding:0 13px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#f3f4f5;
+      color:#555;
+      font-size:11px;
+      text-align:left;
+    }
+
+    .cta{
+      width:100%;
+      height:52px;
+      border:0;
+      border-radius:16px;
+      background:#151613;
+      color:#99f950;
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .tabs{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      border-radius:20px 20px 0 0;
+      background:#fff;
+      box-shadow:0 0 16px rgba(28,28,30,.1);
+    }
+    .tabrow{
+      height:56px;
+      display:flex;
+    }
+    .tab{
+      flex:1;
+      border:0;
+      background:none;
+      color:#8e8e93;
+      font-size:10px;
+    }
+    .tab i{
+      display:block;
+      margin-bottom:2px;
+      font-style:normal;
+      font-size:18px;
+    }
+    .tab.active{
+      color:#151613;
+      font-weight:700;
+    }
+    .tab.active i{
+      width:32px;
+      height:32px;
+      margin:0 auto 2px;
+      border-radius:50%;
+      background:#99f950;
+      line-height:32px;
+    }
+    .homebar{
+      height:34px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .homebar::after{
+      content:"";
+      width:134px;
+      height:5px;
+      border-radius:999px;
+      background:#151613;
+    }
+
+    .identity{
+      margin-top:14px;
+      padding:14px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#fff;
+    }
+    .identity> b{
+      display:block;
+      margin-bottom:8px;
+      font-size:13px;
+    }
+    .key{
+      display:grid;
+      grid-template-columns:104px 1fr;
+      gap:7px;
+      margin-top:8px;
+      font-size:11px;
+      line-height:1.45;
+    }
+    .key span:first-child{color:var(--sub)}
+
+    .compare-table{
+      margin-top:28px;
+      padding:18px;
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:#fff;
+    }
+    .compare-table h3{
+      margin:0 0 14px;
+      font-size:18px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:12px;
+    }
+    th,td{
+      padding:10px 8px;
+      border-bottom:1px solid #eee;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{
+      color:#777;
+      font-size:11px;
+    }
+
+    @media(max-width:860px){
+      .compare{grid-template-columns:1fr}
+      .phone{width:390px}
+    }
+
+    /* ===== Screen Panels (공통) ===== */
+    .screen-panel{
+      position:absolute;
+      inset:0;
+      display:flex;
+      flex-direction:column;
+      background:var(--surface);
+      opacity:0;
+      visibility:hidden;
+      transform:translateY(16px);
+      transition:opacity .25s ease, transform .25s ease, visibility .25s;
+      z-index:10;
+      overflow:hidden;
+    }
+    .screen-panel.active{
+      opacity:1;
+      visibility:visible;
+      transform:translateY(0);
+    }
+    .screen-panel.active ~ .tabs{display:none}
+
+    /* Back button */
+    .back-btn{
+      position:absolute;
+      top:12px;
+      left:12px;
+      z-index:20;
+      width:40px;
+      height:40px;
+      border:0;
+      border-radius:50%;
+      background:rgba(255,255,255,.92);
+      backdrop-filter:blur(8px);
+      box-shadow:var(--shadow-soft);
+      color:var(--text);
+      font-size:18px;
+      line-height:1;
+      display:grid;
+      place-items:center;
+      transition:background .15s, transform .1s;
+    }
+    .back-btn:active{transform:scale(.94)}
+    .back-btn:hover{background:#fff}
+
+    /* ===== A안: 스토리 플레이어 ===== */
+    .story-hero{
+      position:relative;
+      height:260px;
+      overflow:hidden;
+    }
+    .story-hero-image{
+      position:absolute;
+      inset:0;
+      background-size:cover;
+      background-position:center;
+      transform:scale(1.02);
+    }
+    .story-hero-image::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.55) 100%);
+    }
+    .story-hero-info{
+      position:absolute;
+      left:20px;
+      right:20px;
+      bottom:20px;
+      color:#fff;
+      z-index:2;
+    }
+    .story-location{
+      margin:0 0 6px;
+      font-size:11px;
+      font-weight:700;
+      opacity:.9;
+    }
+    .story-title{
+      margin:0;
+      font-size:22px;
+      line-height:1.25;
+      letter-spacing:-.6px;
+      text-shadow:0 2px 8px rgba(0,0,0,.35);
+    }
+
+    .story-content{
+      flex:1;
+      overflow-y:auto;
+      padding:20px;
+      scrollbar-width:none;
+    }
+    .story-content::-webkit-scrollbar{display:none}
+    .story-paragraph{
+      margin-bottom:18px;
+      line-height:1.7;
+      font-size:12.5px;
+      color:var(--text);
+      opacity:.55;
+      transform:translateY(4px);
+      transition:opacity .3s ease, transform .3s ease, color .3s ease;
+    }
+    .story-paragraph p{margin:0}
+    .story-paragraph.active{
+      opacity:1;
+      transform:translateY(0);
+      color:var(--text);
+      font-weight:500;
+    }
+    .story-paragraph.playing{
+      color:#1a7f0a;
+    }
+
+    .player-bar{
+      position:sticky;
+      bottom:0;
+      z-index:15;
+      padding:12px 16px 16px;
+      background:linear-gradient(180deg,rgba(243,244,245,0) 0%,var(--surface) 35%);
+      border-top:1px solid var(--border);
+    }
+    .player-progress{
+      position:relative;
+      height:4px;
+      border-radius:999px;
+      background:var(--soft);
+      margin-bottom:10px;
+      cursor:pointer;
+    }
+    .player-progress-fill{
+      position:absolute;
+      top:0;
+      left:0;
+      height:100%;
+      border-radius:999px;
+      background:var(--accent);
+      width:0%;
+      transition:width .1s linear;
+    }
+    .player-progress-knob{
+      position:absolute;
+      top:50%;
+      left:0%;
+      width:14px;
+      height:14px;
+      margin-top:-7px;
+      margin-left:-7px;
+      border-radius:50%;
+      background:var(--accent);
+      box-shadow:0 2px 6px rgba(0,0,0,.15);
+      transform:scale(0);
+      transition:transform .15s ease;
+    }
+    .player-progress:focus-visible .player-progress-knob,
+    .player-progress:hover .player-progress-knob{transform:scale(1)}
+
+    .player-controls{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:18px;
+      margin-bottom:10px;
+    }
+    .player-time{
+      font-size:10px;
+      font-variant-numeric:tabular-nums;
+      color:var(--muted);
+      background:none;
+      border:0;
+      padding:0;
+    }
+    .player-play{
+      width:44px;
+      height:44px;
+      border:0;
+      border-radius:50%;
+      background:#151613;
+      color:var(--accent);
+      font-size:16px;
+      display:grid;
+      place-items:center;
+      box-shadow:var(--shadow-soft);
+      transition:transform .1s, background .15s;
+    }
+    .player-play:active{transform:scale(.92)}
+    .player-play.playing::before{content:"\29DA"}
+    .player-play::before{content:"\25B6"}
+
+    .player-actions{
+      display:flex;
+      gap:8px;
+      justify-content:center;
+    }
+    .player-btn{
+      height:40px;
+      padding:0 14px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      font-size:11px;
+      font-weight:700;
+      color:var(--text);
+      transition:background .15s, border-color .15s;
+    }
+    .player-btn:hover{background:var(--soft)}
+    .player-btn.badge-btn{
+      background:#151613;
+      color:var(--accent);
+      border-color:#151613;
+    }
+    .player-btn.badge-btn:hover{background:#222}
+
+    /* ===== B안: AR 카메라 ===== */
+    .ar-camera-feed{
+      position:relative;
+      flex:1;
+      overflow:hidden;
+      background:#000;
+    }
+    .ar-camera-feed img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      position:absolute;
+      top:0; left:0;
+    }
+    .ar-overlay-wrap{
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+    }
+    .ar-current,
+    .ar-past{
+      position:absolute;
+      inset:0;
+      transition:opacity .3s ease, transform .3s ease;
+    }
+    .ar-current{opacity:1; transform:translateX(0)}
+    .ar-past{opacity:0; transform:translateX(20px); pointer-events:none}
+
+    .ar-past .ghost{
+      border:3px solid rgba(255,255,255,.9);
+      border-top:20px solid rgba(255,255,255,.56);
+      box-shadow:0 0 24px rgba(255,255,255,.22);
+    }
+    .past-label{
+      position:absolute;
+      left:50%;
+      bottom:500px;
+      transform:translateX(-50%);
+      padding:4px 10px;
+      border-radius:999px;
+      background:rgba(0,0,0,.6);
+      color:#fff;
+      font-size:10px;
+      font-weight:700;
+      white-space:nowrap;
+      pointer-events:none;
+    }
+
+    .ar-toggle{
+      position:absolute;
+      left:20px;
+      right:20px;
+      bottom:420px;
+      z-index:10;
+      height:44px;
+    }
+    .ar-toggle-track{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 24px;
+      height:36px;
+      border-radius:18px;
+      background:rgba(255,255,255,.92);
+      backdrop-filter:blur(8px);
+      box-shadow:var(--shadow-soft);
+    }
+    .ar-toggle-label{
+      font-size:11px;
+      font-weight:700;
+      color:var(--muted);
+      z-index:1;
+    }
+    .ar-toggle-thumb{
+      position:absolute;
+      top:4px;
+      left:4px;
+      width:36px;
+      height:36px;
+      border-radius:50%;
+      background:#151613;
+      box-shadow:var(--shadow-soft);
+      display:grid;
+      place-items:center;
+      color:var(--accent);
+      font-size:14px;
+      transition:left .3s cubic-bezier(.25,.46,.45,.94);
+      z-index:2;
+    }
+    .ar-toggle-thumb::before{content:"\25B6"}
+
+    .ar-shutter{
+      position:absolute;
+      left:50%;
+      bottom:320px;
+      transform:translateX(-50%);
+      z-index:10;
+    }
+    .shutter-ring{
+      width:56px;
+      height:56px;
+      border:3px solid rgba(255,255,255,.9);
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+    }
+    .shutter-core{
+      width:40px;
+      height:40px;
+      border:2px solid #fff;
+      border-radius:50%;
+      background:transparent;
+    }
+
+    .ar-ai-assist{
+      position:absolute;
+      left:0; right:0;
+      bottom:0;
+      z-index:12;
+      margin:0;
+      border-radius:20px 20px 0 0;
+      border:none;
+      border-top:1px solid var(--border);
+      background:linear-gradient(180deg,rgba(243,244,245,0) 0%,var(--surface) 20%);
+      padding:16px 20px 34px;
+      box-shadow:0 -8px 24px rgba(28,28,30,.08);
+    }
+    .ar-ai-assist .ai-row{margin-bottom:10px}
+    .ar-ai-assist p{font-size:11px; line-height:1.65; color:#444}
+    .ar-ai-assist .ask{
+      width:100%;
+      height:44px;
+      border-radius:12px;
+      font-size:11px;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <header class="intro">
+      <h1>HistoTrip — 서촌 AR 콘텐츠 데모</h1>
+      <p>같은 디자인 시스템에서 <b>제공형 AR(현존 유산 도슨트)</b>과 <b>복원형 AR(사라진 유산 복원)</b>을 비교합니다.</p>
+    </header>
+
+    <section class="compare">
+
+      <!-- A안: 제공형 AR -->
+      <article class="concept">
+        <h2>A. 제공형 AR — 현존 유산 도슨트</h2>
+        <p class="concept-desc">
+          지금도 그 자리에 있는 문화유산을 카메라로 비추면, 3D 모델·정보·오디오 스토리가 오버레이됩니다. "보는 즉시" 역사를 들려주는 방식.
+        </p>
+
+        <div class="phone">
+          <div class="screen">
+            <div class="hero">
+              <div class="kicker">HistoTrip · 서촌 제공형 AR</div>
+              <h3>현재를 걸으며,<br>숨은 이야기를 만나는 여행</h3>
+              <p>가까운 현존 유산을 찾아 AR로 만나고, 장면 속 이야기는 바로 물어보세요.</p>
+            </div>
+
+            <div class="search">
+              <span>⌕</span>
+              <input type="search" placeholder="서촌 유산을 검색 (예: 백송, 창의문)" />
+            </div>
+
+            <div class="chips">
+              <button class="chip active">전체</button>
+              <button class="chip">자연</button>
+              <button class="chip">건축</button>
+              <button class="chip">조망</button>
+              <button class="chip">문화</button>
+            </div>
+
+            <div class="section">
+              <div class="sec-head">
+                <h4>가까운 현존 유산</h4>
+                <span>휠로 둘러보기 ↔</span>
+              </div>
+
+              <div class="wheel-carousel" data-wheel-carousel>
+                <article class="place-card" data-ar-place="baeksong">
+                  <div class="place-image" style="background-image:url('images/img_seochon_bluehouse_walk.png')"></div>
+                  <div class="place-info">
+                    <small>📍 120m · 통의동</small>
+                    <b>통의동 백송 터</b>
+                    <p>천연기념물이었던 600년 백송의 이야기</p>
+                    <div class="badges"><span class="badge lime">◫ AR 도슨트</span></div>
+                  </div>
+                </article>
+
+                <article class="place-card" data-ar-place="leesangbeom">
+                  <div class="place-image" style="background-image:url('images/img_hanok_cafe_4.jpg')"></div>
+                  <div class="place-info">
+                    <small>📍 220m · 누하동</small>
+                    <b>이상범 가옥</b>
+                    <p>산수화 거장이 30년을 산 도시형 한옥</p>
+                    <div class="badges"><span class="badge lime">◫ AR 도슨트</span></div>
+                  </div>
+                </article>
+
+                <article class="place-card" data-ar-place="pilwundae">
+                  <div class="place-image" style="background-image:url('images/img_hanyangdoseong_naksan.jpg')"></div>
+                  <div class="place-info">
+                    <small>📍 300m · 필운동</small>
+                    <b>필운대</b>
+                    <p>겸재 정선이 그린 조망처, 이항복의 별서 터</p>
+                    <div class="badges"><span class="badge lime">◫ AR 도슨트</span></div>
+                  </div>
+                </article>
+
+                <article class="place-card" data-ar-place="sajikdan">
+                  <div class="place-image" style="background-image:url('images/img_palace_course.png')"></div>
+                  <div class="place-info">
+                    <small>📍 500m · 사직동</small>
+                    <b>사직단</b>
+                    <p>나라의 토지신·곡식신에게 제사 지내던 성역</p>
+                    <div class="badges"><span class="badge lime">◫ AR 도슨트</span></div>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="sec-head">
+                <h4>지금 바로 만나는 서촌</h4>
+                <span>더보기</span>
+              </div>
+
+              <div class="quick">
+                <article class="q" data-ar-place="cheongyeon">
+                  <div class="qimg" style="background-image:url('images/img_hanyangdoseong_naksan.jpg')"></div>
+                  <div class="qbody">
+                    <b>창의문 (자하문)</b>
+                    <p>600년을 지켜온 한양도성 사소문</p>
+                  </div>
+                </article>
+
+                <article class="q" data-ar-place="chebudong">
+                  <div class="qimg" style="background-image:url('images/img_blackwhite_photo_studio_alley.jpg')"></div>
+                  <div class="qbody">
+                    <b>체부동 성결교회</b>
+                    <p>1931년 벽돌교회가 문화센터로</p>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <div class="section">
+              <button class="cta" id="btn-ar-start">◫ 카메라로 서촌 유산 만나기</button>
+            </div>
+          </div>
+
+          <!-- A안: 제공형 AR 카메라 화면 -->
+          <div class="screen-panel" id="panel-ar-camera" role="region" aria-label="AR 카메라" aria-hidden="true" inert>
+            <button class="back-btn" id="btn-ar-back" aria-label="홈으로 돌아가기">←</button>
+
+            <div class="ar-camera-feed" id="ar-camera-feed">
+              <div class="ar-chip" id="ar-chip-label" style="left:14px; top:14px;">통의동 백송 터 · 현존</div>
+
+              <div class="ar-overlay-wrap">
+                <div class="ar-current" id="ar-current">
+                  <img src="images/img_seochon_bluehouse_walk.png" id="ar-current-img" alt="현재 모습" />
+                </div>
+                <div class="ar-past" id="ar-past">
+                  <img src="images/img_seochon_bluehouse_walk.png" id="ar-past-img" alt="과거 모습" />
+                  <div class="ghost" style="left:54px; right:54px; bottom:540px; height:128px;"></div>
+                  <div class="past-label">복원된 모습</div>
+                </div>
+              </div>
+
+              <div class="ar-toggle" id="ar-toggle" role="slider" aria-label="현재/복원 전환" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                <div class="ar-toggle-track">
+                  <span class="ar-toggle-label">현재</span>
+                  <span class="ar-toggle-label">복원</span>
+                </div>
+                <div class="ar-toggle-thumb" id="ar-toggle-thumb"></div>
+              </div>
+
+              <div class="ar-shutter" id="ar-shutter" aria-label="촬영">
+                <div class="shutter-ring"></div>
+                <div class="shutter-core"></div>
+              </div>
+            </div>
+
+            <div class="ai-assist ar-ai-assist" id="ar-ai-assist">
+              <div class="ai-row">
+                <div class="avatar">🧭</div>
+                <div>
+                  <b id="ar-ai-title">통의동 백송 터를 보고 계십니다</b>
+                  <small>이 유산에 대해 자유롭게 질문할 수 있습니다</small>
+                </div>
+              </div>
+              <p id="ar-ai-desc">우리나라에서 가장 크고 오래된 백송. 1962년 천연기념물 제4호로 지정되었으나, 1990년 7월 폭풍으로 쓰러져 지정이 해제되었습니다. 1994년 나이테 분석 결과 1690년경에 심은 것으로 밝혀졌습니다. 현재는 밑동 일부와 터만 남아 있습니다.</p>
+              <button class="ask">💬 이 유산에서 궁금한 것을 물어보세요</button>
+            </div>
+          </div>
+
+          <nav class="tabs">
+            <div class="tabrow">
+              <button class="tab active"><i>⌂</i>홈</button>
+              <button class="tab"><i>◫</i>유산</button>
+              <button class="tab"><i>⌖</i>지도</button>
+              <button class="tab"><i>♙</i>마이</button>
+            </div>
+            <div class="homebar"></div>
+          </nav>
+        </div>
+
+        <div class="identity">
+          <b>제공형 AR의 정체성</b>
+          <div class="key"><span>사용자 기대</span><span>"지금 이 자리에 있는 유산의 이야기는?"</span></div>
+          <div class="key"><span>AR 역할</span><span>현존 유산에 정보·스토리를 입히는 도슨트</span></div>
+          <div class="key"><span>AI 역할</span><span>유산 해설·질문 응답</span></div>
+          <div class="key"><span>콘텐츠</span><span>현존 유산 10곳 (백송·이상범 가옥·필운대·사직단 등)</span></div>
+        </div>
+      </article>
+
+      <!-- B안: 복원형 AR -->
+      <article class="concept">
+        <h2>B. 복원형 AR — 사라진 유산 복원</h2>
+        <p class="concept-desc">
+          사진·고지도·문헌을 기반으로 소실된 유산의 3D 모델을 복원해, 원래 위치에 AR로 오버레이합니다. "과거의 모습"을 보여주는 방식.
+        </p>
+
+        <div class="phone">
+          <div class="screen">
+            <div class="hero">
+              <div class="kicker">HistoTrip · 서촌 복원형 AR</div>
+              <h3>현재를 걸으며,<br>사라진 과거를 확인하는 여행</h3>
+              <p>사라진 유산을 원래 위치에서 3D로 복원해 보고, 장면 속 이야기는 바로 물어보세요.</p>
+            </div>
+
+            <div class="search">
+              <span>⌕</span>
+              <input type="search" placeholder="복원 유산을 검색 (예: 돈의문, 세검정)" />
+            </div>
+
+            <div class="chips">
+              <button class="chip active">전체</button>
+              <button class="chip">성곽</button>
+              <button class="chip">건축</button>
+              <button class="chip">자연</button>
+              <button class="chip">근대</button>
+            </div>
+
+            <div class="section">
+              <div class="sec-head">
+                <h4>사라졌지만 다시 만나는 유산</h4>
+                <span>지도보기</span>
+              </div>
+            </div>
+
+            <div class="ar-hero" id="ar-hero-card" data-ar-place="donuimun" role="button" tabindex="0" aria-label="돈의문 복원 AR 시작하기" style="background-image:url('images/img_hanyangdoseong_naksan.jpg')">
+              <div class="ar-chip">120m · 돈의문 터 · 1915년 철거</div>
+              <div class="ghost"></div>
+              <div class="ar-copy">
+                <b>서울의 서쪽 문, 돈의문이 다시 섭니다</b>
+                <p>이 자리에 500년을 지켜온 성문이 있었습니다. 카메라로 원래 모습을 확인해보세요.</p>
+              </div>
+            </div>
+
+            <div class="ai-assist">
+              <div class="ai-row">
+                <div class="avatar">🧭</div>
+                <div>
+                  <b>복원된 장면을 설명해드릴게요</b>
+                  <small>이 화면 속 복원 유산에 대해 자유롭게 질문할 수 있습니다</small>
+                </div>
+              </div>
+              <p>"사라진 유산의 복원은 사진·고지도·발굴 보고서를 기반으로 합니다. 무엇이 사라졌고, 왜 사라졌는지 함께 살펴볼 수 있습니다."</p>
+              <button class="ask">💬 이 복원 유산에서 궁금한 것을 물어보세요</button>
+            </div>
+
+            <div class="section">
+              <div class="sec-head">
+                <h4>복원 가능한 유산</h4>
+                <span>휠로 둘러보기 ↔</span>
+              </div>
+
+              <div class="wheel-carousel" data-wheel-carousel>
+                <article class="place-card" data-ar-place="donuimun">
+                  <div class="place-image" style="background-image:url('images/img_hanyangdoseong_naksan.jpg')"></div>
+                  <div class="place-info">
+                    <small>📍 120m · 정동사거리</small>
+                    <b>돈의문 (서대문)</b>
+                    <p>1915년 철거된 한양도성 서쪽 큰 문</p>
+                    <div class="badges"><span class="badge blue">◫ 복원 AR</span></div>
+                  </div>
+                </article>
+
+                <article class="place-card" data-ar-place="baekseokdongcheon">
+                  <div class="place-image" style="background-image:url('images/img_hanok_cafe_courtyard.jpg')"></div>
+                  <div class="place-info">
+                    <small>📍 900m · 부암동</small>
+                    <b>백석동천 별서</b>
+                    <p>흰 돌이 많아 이름 붙은 19세기 별서</p>
+                    <div class="badges"><span class="badge blue">◫ 복원 AR</span></div>
+                  </div>
+                </article>
+
+                <article class="place-card" data-ar-place="segeomjeong">
+                  <div class="place-image" style="background-image:url('images/img_hanyangdoseong_naksan.jpg')"></div>
+                  <div class="place-info">
+                    <small>📍 1.1km · 부암동</small>
+                    <b>세검정</b>
+                    <p>인조반정 때 칼을 씻었다는 정자</p>
+                    <div class="badges"><span class="badge blue">◫ 복원 AR</span></div>
+                  </div>
+                </article>
+
+                <article class="place-card" data-ar-place="gyeonghuigung">
+                  <div class="place-image" style="background-image:url('images/img_palace_course.png')"></div>
+                  <div class="place-info">
+                    <small>📍 800m · 신문로</small>
+                    <b>경희궁 사라진 전각</b>
+                    <p>일제가 철거·매각한 서궐의 전각들</p>
+                    <div class="badges"><span class="badge blue">◫ 복원 AR</span></div>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <div class="section">
+              <button class="cta" id="btn-ar-start-2">◫ 카메라로 과거 복원 시작</button>
+            </div>
+          </div>
+
+          <!-- B안: 복원형 AR 카메라 화면 -->
+          <div class="screen-panel" id="panel-ar-camera-2" role="region" aria-label="복원 AR 카메라" aria-hidden="true" inert>
+            <button class="back-btn" id="btn-ar-back-2" aria-label="홈으로 돌아가기">←</button>
+
+            <div class="ar-camera-feed" id="ar-camera-feed-2">
+              <div class="ar-chip" id="ar-chip-label-2" style="left:14px; top:14px;">돈의문 터 · 1915년 철거</div>
+
+              <div class="ar-overlay-wrap">
+                <div class="ar-current" id="ar-current-2">
+                  <img src="images/img_hanyangdoseong_naksan.jpg" id="ar-current-img-2" alt="현재 모습" />
+                </div>
+                <div class="ar-past" id="ar-past-2">
+                  <img src="images/img_hanyangdoseong_naksan.jpg" id="ar-past-img-2" alt="복원 모습" />
+                  <div class="ghost" style="left:54px; right:54px; bottom:540px; height:128px;"></div>
+                  <div class="past-label">복원된 돈의문</div>
+                </div>
+              </div>
+
+              <div class="ar-toggle" id="ar-toggle-2" role="slider" aria-label="현재/복원 전환" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                <div class="ar-toggle-track">
+                  <span class="ar-toggle-label">현재</span>
+                  <span class="ar-toggle-label">복원</span>
+                </div>
+                <div class="ar-toggle-thumb" id="ar-toggle-thumb-2"></div>
+              </div>
+
+              <div class="ar-shutter" id="ar-shutter-2" aria-label="촬영">
+                <div class="shutter-ring"></div>
+                <div class="shutter-core"></div>
+              </div>
+            </div>
+
+            <div class="ai-assist ar-ai-assist" id="ar-ai-assist-2">
+              <div class="ai-row">
+                <div class="avatar">🧭</div>
+                <div>
+                  <b id="ar-ai-title-2">돈의문 터를 보고 계십니다</b>
+                  <small>이 복원 유산에 대해 자유롭게 질문할 수 있습니다</small>
+                </div>
+              </div>
+              <p id="ar-ai-desc-2">한양도성 4대문 중 서쪽 큰 문. 1396년 건립되어 유교 덕목 '의(義)'에서 이름을 땄습니다. 1915년 일제강점기 전차 선로 부설을 명분으로 철거되었습니다. 현재 정동사거리에 도로가 깔려 흔적이 없으며, 2024년 서울시가 복원 계획을 발표했습니다.</p>
+              <button class="ask">💬 이 복원 유산에서 궁금한 것을 물어보세요</button>
+            </div>
+          </div>
+
+          <nav class="tabs">
+            <div class="tabrow">
+              <button class="tab active"><i>⌂</i>홈</button>
+              <button class="tab"><i>◫</i>복원</button>
+              <button class="tab"><i>⌖</i>지도</button>
+              <button class="tab"><i>♙</i>마이</button>
+            </div>
+            <div class="homebar"></div>
+          </nav>
+        </div>
+
+        <div class="identity">
+          <b>복원형 AR의 정체성</b>
+          <div class="key"><span>사용자 기대</span><span>"이 자리엔 원래 무엇이 있었지?"</span></div>
+          <div class="key"><span>AR 역할</span><span>사라진 유산의 3D 복원 오버레이 (주인공)</span></div>
+          <div class="key"><span>AI 역할</span><span>복원 근거·역사 해설·질문 응답</span></div>
+          <div class="key"><span>콘텐츠</span><span>복원 유산 10곳 (돈의문·백석동천·세검정·경희궁 등)</span></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="compare-table">
+      <h3>제공형 vs 복원형 — 서촌 AR 콘텐츠 비교</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>항목</th>
+            <th>A. 제공형 AR</th>
+            <th>B. 복원형 AR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>첫 사용자 질문</td><td>"지금 이 유산의 이야기는?"</td><td>"이 자리엔 원래 무엇이 있었지?"</td></tr>
+          <tr><td>대상 유산</td><td>현존 유산 (백송 터·이상범 가옥·사직단 등)</td><td>사라진 유산 (돈의문·세검정·경희궁 전각 등)</td></tr>
+          <tr><td>주요 CTA</td><td>카메라로 서촌 유산 만나기</td><td>카메라로 과거 복원 시작</td></tr>
+          <tr><td>3D 모델</td><td>현장 실측 + Photogrammetry</td><td>고지도·문헌 기반 복원 모델링</td></tr>
+          <tr><td>AR 연출</td><td>현존 유산에 정보·스토리 오버레이</td><td>소실 유산을 원위치에 복원 오버레이</td></tr>
+          <tr><td>감동 포인트</td><td>"이런 이야기가 있었구나"</td><td>"이 자리에 이런 게 있었구나"</td></tr>
+          <tr><td>제품 인상</td><td>현장형 유산 도슨트</td><td>시간여행 복원 플랫폼</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    // 마우스 휠의 세로 입력을 가로 캐러셀 이동으로 변환
+    document.querySelectorAll("[data-wheel-carousel]").forEach((carousel) => {
+      carousel.addEventListener("wheel", (event) => {
+        if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+          event.preventDefault();
+          carousel.scrollBy({
+            left: event.deltaY * 1.15,
+            behavior: "smooth"
+          });
+        }
+      }, { passive:false });
+    });
+
+    // 카테고리 버튼 데모
+    document.querySelectorAll(".chips").forEach((group) => {
+      group.querySelectorAll(".chip").forEach((button) => {
+        button.addEventListener("click", () => {
+          group.querySelectorAll(".chip").forEach((item) => item.classList.remove("active"));
+          button.classList.add("active");
+        });
+      });
+    });
+
+    // ===== 화면 전환 유틸 =====
+    function showPanel(panelId) {
+      const panel = document.getElementById(panelId);
+      if (!panel) return;
+      panel.classList.add("active");
+      panel.removeAttribute("inert");
+      panel.setAttribute("aria-hidden", "false");
+      const backBtn = panel.querySelector(".back-btn");
+      if (backBtn) backBtn.focus();
+    }
+    function hidePanel(panelId) {
+      const panel = document.getElementById(panelId);
+      if (!panel) return;
+      panel.classList.remove("active");
+      panel.setAttribute("inert", "");
+      panel.setAttribute("aria-hidden", "true");
+    }
+
+    // ===== AR 화면 컨트롤러 (제공형/복원형 공통) =====
+    function makeArController(scope) {
+      const panel = document.getElementById(scope.panel);
+      const toggle = document.getElementById(scope.toggle);
+      const thumb = document.getElementById(scope.thumb);
+      const currentView = document.getElementById(scope.currentView);
+      const pastView = document.getElementById(scope.pastView);
+      const shutter = document.getElementById(scope.shutter);
+      const btnBack = document.getElementById(scope.btnBack);
+
+      let isPast = false;
+      let isDragging = false;
+
+      function setView(past) {
+        isPast = past;
+        if (past) {
+          currentView.style.opacity = "0";
+          currentView.style.transform = "translateX(-20px)";
+          currentView.style.pointerEvents = "none";
+          pastView.style.opacity = "1";
+          pastView.style.transform = "translateX(0)";
+          pastView.style.pointerEvents = "auto";
+          thumb.style.left = "calc(100% - 40px)";
+          toggle.setAttribute("aria-valuenow", "100");
+        } else {
+          currentView.style.opacity = "1";
+          currentView.style.transform = "translateX(0)";
+          currentView.style.pointerEvents = "auto";
+          pastView.style.opacity = "0";
+          pastView.style.transform = "translateX(20px)";
+          pastView.style.pointerEvents = "none";
+          thumb.style.left = "4px";
+          toggle.setAttribute("aria-valuenow", "0");
+        }
+      }
+
+      function toggleView() { setView(!isPast); }
+
+      function openAr(placeId) {
+        const place = scope.places[placeId] || scope.places[scope.defaultPlace];
+        const chip = document.getElementById(scope.chip);
+        if (chip) chip.textContent = place.chip;
+        const curImg = document.getElementById(scope.curImg);
+        const pastImg = document.getElementById(scope.pastImg);
+        if (curImg) curImg.src = place.img;
+        if (pastImg) pastImg.src = place.img;
+        const title = document.getElementById(scope.title);
+        if (title) title.textContent = place.title;
+        const desc = document.getElementById(scope.desc);
+        if (desc) desc.textContent = place.desc;
+        setView(false);
+        showPanel(scope.panel);
+      }
+
+      const btnStart = document.getElementById(scope.btnStart);
+      if (btnStart) btnStart.addEventListener("click", () => openAr(scope.defaultPlace));
+      if (btnBack) btnBack.addEventListener("click", () => hidePanel(scope.panel));
+
+      if (toggle) {
+        toggle.addEventListener("click", (e) => {
+          if (e.target === thumb) return;
+          toggleView();
+        });
+        toggle.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            e.preventDefault();
+            toggleView();
+          }
+        });
+      }
+      if (thumb) {
+        thumb.addEventListener("pointerdown", (e) => { isDragging = true; e.preventDefault(); });
+        window.addEventListener("pointermove", (e) => {
+          if (!isDragging) return;
+          const rect = toggle.getBoundingClientRect();
+          const x = (e.clientX || e.touches?.[0]?.clientX || 0) - rect.left;
+          const pct = Math.max(0, Math.min(1, x / rect.width));
+          thumb.style.left = `calc(${pct * 100}% - 18px)`;
+          if (pct > 0.5 && !isPast) setView(true);
+          else if (pct <= 0.5 && isPast) setView(false);
+        });
+        window.addEventListener("pointerup", () => { isDragging = false; });
+      }
+      if (shutter) shutter.addEventListener("click", () => alert("촬영 기능은 데모에서 생략되었습니다."));
+
+      setView(false);
+      return { openAr };
+    }
+
+    // ===== A안: 제공형 AR — 서촌 현존 유산 10곳 =====
+    const AR_PLACES_PROVIDED = {
+      baeksong: {
+        chip: "120m · 통의동 백송 터 · 현존",
+        img: "images/img_seochon_bluehouse_walk.png",
+        title: "통의동 백송 터를 보고 계십니다",
+        desc: "우리나라에서 가장 크고 오래된 백송. 1962년 천연기념물 제4호로 지정되었으나, 1990년 7월 폭풍으로 쓰러져 지정이 해제되었습니다. 1994년 나이테 분석 결과 1690년경에 심은 것으로 밝혀졌습니다. 현재는 밑동 일부와 터만 남아 있습니다. '쓰러진 나무는 어디로 갔을까?' — 쓰러진 백송은 소유자가 문화재관리국에 기증했습니다."
+      },
+      leesangbeom: {
+        chip: "220m · 누하동 이상범 가옥 · 현존",
+        img: "images/img_hanok_cafe_4.jpg",
+        title: "이상범 가옥을 보고 계십니다",
+        desc: "근대 산수화의 거장 청전 이상범(1897~1972)이 1942년부터 1972년 작고할 때까지 30년간 거주하며 작품 활동을 한 곳. 1930년대에 지어진 도시형 한옥으로 서울시 민속문화유산입니다. 화실 위치에서 '이곳에서 그린 그림'을 AR로 확인할 수 있습니다."
+      },
+      pilwundae: {
+        chip: "300m · 필운동 필운대 · 조망처",
+        img: "images/img_hanyangdoseong_naksan.jpg",
+        title: "필운대를 보고 계십니다",
+        desc: "겸재 정선이 그림(필운상화)에 담은 경승지. 권율 장군이 부친 영의정 권철에게 물려받아, 다시 사위인 백사 이항복에게 물려준 별서 터입니다. 현재는 축대에 '필운대' 글자만 남아 있습니다. 겸재의 그림을 AR로 오버레이해 300년 전 풍경을 비교할 수 있습니다."
+      },
+      sajikdan: {
+        chip: "500m · 사직동 사직단 · 사적 121호",
+        img: "images/img_palace_course.png",
+        title: "사직단을 보고 계십니다",
+        desc: "조선 태조 4년(1396) 한양 도읍 때 좌묘우사에 따라 경복궁 동쪽엔 종묘, 서쪽엔 사직단을 배치. 나라의 토지신(사)과 곡식신(직)에게 제사 지내던 성역으로 사적 제121호입니다. 1922년 일제가 주변 전각 13개를 철거한 아픈 역사도 있습니다."
+      },
+      cheongyeon: {
+        chip: "600m · 청운동 창의문 · 보물 1881호",
+        img: "images/img_hanyangdoseong_naksan.jpg",
+        title: "창의문(자하문)을 보고 계십니다",
+        desc: "한양도성 4소문 중 서북쪽 문. 조선 태조 5년(1396) 도성 축조 때 건립되었고, 근처 계곡 이름을 따 자하문이라 불렸습니다. 흥인지문과 함께 조선시대 원형을 간직한 유이한 성문으로 2015년 보물 제1881호로 지정되었습니다."
+      },
+      chebudong: {
+        chip: "700m · 체부동 성결교회 · 근대건축",
+        img: "images/img_blackwhite_photo_studio_alley.jpg",
+        title: "체부동 성결교회를 보고 계십니다",
+        desc: "1931년 지어진 벽돌 교회로, 프랑스식·영국식 벽돌 쌓기가 공존하는 희귀한 근대 건축입니다. 80여 년간 체부동 골목길을 지켰고, 2016년 서울시 미래유산으로 선정된 뒤 2018년 체부동 생활문화지원센터로 리모델링되었습니다."
+      },
+      honggeonik: {
+        chip: "450m · 필운동 홍건익 가옥 · 민속문화유산",
+        img: "images/img_hanok_cafe_courtyard.jpg",
+        title: "홍건익 가옥을 보고 계십니다",
+        desc: "1934~1936년 홍건익이 지은 근대한옥. 백사 이항복의 저택으로 구전되던 터에, 목조와즙 5동과 일각문·석조 우물·빙고를 갖췄습니다. 서울 한옥 중 유일하게 일각문·우물·빙고가 모두 남은 곳으로 서울시 공공한옥으로 운영됩니다."
+      },
+      susungdong: {
+        chip: "800m · 옥인동 수성동계곡 · 자연경승",
+        img: "images/img_seochon_bluehouse_walk.png",
+        title: "수성동계곡을 보고 계십니다",
+        desc: "겸재 정선이 《장동팔경첩-수성동》에 그린 경승지. 1971년 옥인시범아파트로 계곡이 사라졌다가, 2008년부터 1060억 원을 들여 아파트를 철거하고 겸재의 그림을 참고해 복원했습니다. 복원 과정에서 조선시대 돌다리 기린교가 발굴되었습니다."
+      },
+      isang: {
+        chip: "350m · 통인동 이상의 집 · 문학공간",
+        img: "images/img_hanok_dessert_tea.jpg",
+        title: "이상의 집을 보고 계십니다",
+        desc: "모더니즘 작가 이상(1910~1937)이 세 살부터 20여 년간 머물던 집터. 이상이 운영한 문화예술인 아지트 '제비다방'을 현대적으로 재해석한 문학기념관으로 2009년 조성되었습니다."
+      },
+      yoondongju: {
+        chip: "1km · 청운동 윤동주문학관 · 문학",
+        img: "images/img_night_walk_namsan.jpg",
+        title: "윤동주문학관을 보고 계십니다",
+        desc: "1974년 청운수도가압장이던 콘크리트 박스가 2012년 윤동주문학관으로 재탄생했습니다. 시인의 언덕이라 불리는 자하문고개에 위치하며, 대한민국 공공건축상과 서울시 건축상을 수상했습니다."
+      }
+    };
+
+    // ===== B안: 복원형 AR — 서촌 사라진 유산 10곳 =====
+    const AR_PLACES_RESTORED = {
+      donuimun: {
+        chip: "120m · 돈의문 터 · 1915년 철거",
+        img: "images/img_hanyangdoseong_naksan.jpg",
+        title: "돈의문 터를 보고 계십니다",
+        desc: "한양도성 4대문 중 서쪽 큰 문. 1396년 건립되어 유교 덕목 '의(義)'에서 이름을 땄습니다. 1915년 일제강점기 전차 선로 부설을 명분으로 철거되었습니다. 현재 정동사거리에 도로가 깔려 흔적이 없으며, 2024년 서울시가 복원 계획을 발표했습니다."
+      },
+      baekseokdongcheon: {
+        chip: "900m · 부암동 백석동천 · 19세기",
+        img: "images/img_hanok_cafe_courtyard.jpg",
+        title: "백석동천 별서 터를 보고 계십니다",
+        desc: "1800년대 도성에 인접해 조성된 별서. 흰 돌이 많고 경치가 아름다워 '백석동천'이라 불렸습니다. 발굴된 건물지(사랑채·안채)와 연못, '백석동천'·'월암' 각자바위가 남아 명승 제6호로 지정되었습니다. 백사 이항복의 별서라는 구전도 전해집니다."
+      },
+      segeomjeong: {
+        chip: "1.1km · 부암동 세검정 · 소실",
+        img: "images/img_hanyangdoseong_naksan.jpg",
+        title: "세검정 터를 보고 계십니다",
+        desc: "창의문 밖에 있던 정자. 이름은 인조반정 때 이귀·김류 등이 이곳에 모여 광해군 폐위를 결의하고 칼날을 세웠다(세검)는 데서 유래했습니다. 영조 24년(1748) 총융청을 두어 북한산성 방비를 담당했습니다. 현재 정자는 소실되고 터만 남아 서울시 기념물 제4호로 지정되었습니다."
+      },
+      gyeonghuigung: {
+        chip: "800m · 경희궁지 · 일제 철거",
+        img: "images/img_palace_course.png",
+        title: "경희궁지를 보고 계십니다",
+        desc: "광해군 때(1617) 지어진 서궐. 일제강점기에 일본인이 전각을 강제 철거·매각하여 숭정전(1926년 정각원으로 이전) 등 극히 일부만 남았습니다. 서울고등학교·서울시립미술관으로 쓰이다 1980년대 후반부터 발굴·복원이 시작되어 2002년부터 시민에게 공개되었습니다."
+      },
+      sajikdan_restore: {
+        chip: "500m · 사직단 일제 철거 전각",
+        img: "images/img_palace_course.png",
+        title: "사직단을 보고 계십니다",
+        desc: "나라의 토지신·곡식신에게 제사 지내던 성역이었으나, 일제는 조선왕조의 전통을 훼손하려 1922년 제단 주변 13개 주요 전각을 철거하고 공원(유원지)으로 만들어버렸습니다. 철거된 전각들을 3D로 복원해 현재의 공원 풍경 위에 되살렸습니다."
+      },
+      baeksong_original: {
+        chip: "120m · 통의동 백송 · 쓰러지기 전",
+        img: "images/img_seochon_bluehouse_walk.png",
+        title: "통의동 백송 원형을 보고 계십니다",
+        desc: "1962년 천연기념물 제4호로 지정된 우리나라에서 가장 크고 오래된 백송. 1990년 7월 폭풍으로 쓰러져 지정이 해제되었습니다. 쓰러진 나무는 최동진·최동훈 씨가 백송과 터 약 40평을 문화재관리국에 기증했습니다. 쓰러지기 전 16m 높이의 모습을 3D로 복원했습니다."
+      },
+      bongsudae: {
+        chip: "1.2km · 인왕산 봉수대 · 소실",
+        img: "images/img_night_walk_namsan.jpg",
+        title: "인왕산 봉수대를 보고 계십니다",
+        desc: "조선 세종 때 정식 설치된 봉수제도. 인왕산 일대는 남산(목멱산) 봉수로 이어지는 한양 방어의 경봉수 노선 일부로 기능했습니다. 낮에는 연기, 밤에는 횃불로 급보를 전달했습니다. 현재 봉수대 흔적은 남아 있지 않아, 3D로 복원해 원래 위치에 오버레이했습니다."
+      },
+      susung_apt: {
+        chip: "800m · 옥인시범아파트 · 1971~2008",
+        img: "images/img_seochon_bluehouse_walk.png",
+        title: "옥인시범아파트 시절을 보고 계십니다",
+        desc: "1971년 옥인시범아파트가 들어서며 수성동계곡이 사라졌습니다. 2008년부터 1060억 원을 들여 아파트를 철거하고 겸재 정선의 그림을 참고해 계곡을 복원했습니다. 복원 과정에서 조선시대 돌다리 기린교가 발굴되었습니다. '계곡 → 아파트 → 계곡'의 변화를 타임슬라이더로 확인해보세요."
+      },
+      isang_original: {
+        chip: "350m · 통인동 이상의 집 · 1930년대",
+        img: "images/img_hanok_dessert_tea.jpg",
+        title: "이상의 집 원형 가옥을 보고 계십니다",
+        desc: "이상이 세 살부터 20여 년간 머물던 집. 2009년 문화공간 '이상의 집'으로 재탄생하며 원형 가옥은 해체·재구성되었습니다. 이상이 운영하던 '제비다방' 시절의 모습은 사라졌습니다. 1930년대 원형 가옥(방 구조·다방)을 3D로 복원해 현재 위치에 오버레이했습니다."
+      },
+      jahamun_village: {
+        chip: "1km · 자하문고개 옛 마을 · 소실",
+        img: "images/img_night_walk_namsan.jpg",
+        title: "자하문고개 옛 마을을 보고 계십니다",
+        desc: "자하문고개는 창의문 밖 양주·의주로 향하던 길. 근대화·도시개발로 옛 마을 경관(초가·돌담·우물)이 사라지고 자하문터널·도로가 들어섰습니다. 윤동주가 걸으며 시를 쓰던 언덕으로도 알려져 있습니다. 옛 마을 경관을 고지도를 근거로 3D로 복원했습니다."
+      }
+    };
+
+    // ===== 컨트롤러 생성 =====
+    const controllerA = makeArController({
+      panel: "panel-ar-camera",
+      btnStart: "btn-ar-start",
+      btnBack: "btn-ar-back",
+      toggle: "ar-toggle",
+      thumb: "ar-toggle-thumb",
+      currentView: "ar-current",
+      pastView: "ar-past",
+      shutter: "ar-shutter",
+      chip: "ar-chip-label",
+      curImg: "ar-current-img",
+      pastImg: "ar-past-img",
+      title: "ar-ai-title",
+      desc: "ar-ai-desc",
+      places: AR_PLACES_PROVIDED,
+      defaultPlace: "baeksong"
+    });
+
+    const controllerB = makeArController({
+      panel: "panel-ar-camera-2",
+      btnStart: "btn-ar-start-2",
+      btnBack: "btn-ar-back-2",
+      toggle: "ar-toggle-2",
+      thumb: "ar-toggle-thumb-2",
+      currentView: "ar-current-2",
+      pastView: "ar-past-2",
+      shutter: "ar-shutter-2",
+      chip: "ar-chip-label-2",
+      curImg: "ar-current-img-2",
+      pastImg: "ar-past-img-2",
+      title: "ar-ai-title-2",
+      desc: "ar-ai-desc-2",
+      places: AR_PLACES_RESTORED,
+      defaultPlace: "donuimun"
+    });
+
+    // A안(제공형) 카드/히어로 클릭 → 제공형 AR 열기
+    document.querySelectorAll(".compare .concept")[0].querySelectorAll("[data-ar-place]").forEach((el) => {
+      el.setAttribute("tabindex", "0");
+      el.addEventListener("click", () => controllerA.openAr(el.getAttribute("data-ar-place")));
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          controllerA.openAr(el.getAttribute("data-ar-place"));
+        }
+      });
+    });
+
+    // B안(복원형) 카드/히어로 클릭 → 복원형 AR 열기
+    document.querySelectorAll(".compare .concept")[1].querySelectorAll("[data-ar-place]").forEach((el) => {
+      el.setAttribute("tabindex", "0");
+      el.addEventListener("click", () => controllerB.openAr(el.getAttribute("data-ar-place")));
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          controllerB.openAr(el.getAttribute("data-ar-place"));
+        }
+      });
+    });
+  </script>
+</body>
+</html>
