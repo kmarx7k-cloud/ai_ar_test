@@ -790,72 +790,73 @@
       pointer-events:none;
     }
 
-    /* ===== 현재/복원 토글 (AI 카드 상단 헤더로 통합) ===== */
+    /* ===== 현재/복원 드래그 슬라이더 (AI 카드 상단) ===== */
     .ar-toggle{
       position:relative;
       margin:0 0 10px;
-      height:36px;
+      height:44px;
       z-index:10;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding:0 12px;
+      padding:0 8px;
       background:#fafafa;
       border:1px solid var(--border);
-      border-radius:10px;
-      overflow:hidden;
+      border-radius:12px;
     }
-    .ar-toggle-side{
-      display:flex;
-      align-items:center;
-      gap:7px;
+    .ar-toggle-label{
+      position:relative;
+      z-index:2;
       font-size:11px;
       font-weight:700;
       color:var(--muted);
+      padding:4px 6px;
       cursor:pointer;
       user-select:none;
-      z-index:2;
-      padding:6px 4px;
-      border-radius:8px;
-      transition:color .2s ease, background .2s ease;
+      transition:color .2s ease;
+      background:#fafafa;
     }
-    .ar-toggle-side .arrow{
-      font-size:10px;
-      color:var(--sub);
-      transition:color .2s ease, transform .2s ease;
-    }
-    .ar-toggle-side.active{
+    .ar-toggle-label.active{
       color:#151613;
     }
-    .ar-toggle-side.active .arrow{
-      color:var(--accent);
-    }
-    .ar-toggle-side[data-side="past"].active .arrow{
-      transform:scaleX(-1);
-    }
-    .ar-toggle-divider{
+    .ar-toggle-track{
       position:absolute;
-      left:50%;
-      top:8px;
-      bottom:8px;
-      width:1px;
-      background:var(--border);
+      left:52px;
+      right:52px;
+      top:50%;
+      height:2px;
+      margin-top:-1px;
+      background:#d8d8d8;
+      border-radius:2px;
       z-index:1;
     }
-    /* 선택된 쪽 하이라이트 배경 */
-    .ar-toggle-highlight{
+    .ar-toggle-thumb{
       position:absolute;
-      top:3px;
-      bottom:3px;
-      left:3px;
-      width:calc(50% - 6px);
-      border-radius:8px;
+      top:50%;
+      left:0px;
+      width:30px;
+      height:30px;
+      margin-top:-15px;
+      margin-left:-15px;
+      z-index:3;
+      display:grid;
+      place-items:center;
       background:#151613;
-      transition:left .28s cubic-bezier(.25,.46,.45,.94);
-      z-index:0;
+      border-radius:50%;
+      color:var(--accent);
+      cursor:grab;
+      touch-action:none;
+      box-shadow:var(--shadow-soft);
+      transition:left .15s ease-out;
     }
-    .ar-toggle-highlight.past{
-      left:calc(50% + 3px);
+    .ar-toggle-thumb.dragging{
+      cursor:grabbing;
+      transition:none;
+    }
+    .ar-toggle-thumb .arrow{
+      font-size:11px;
+      line-height:1;
+      pointer-events:none;
     }
 
     .ar-ai-assist{
@@ -1030,14 +1031,10 @@
 
             <div class="ai-assist ar-ai-assist" id="ar-ai-assist">
               <div class="ar-toggle" id="ar-toggle" role="slider" aria-label="현재/복원 전환" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
-                <div class="ar-toggle-highlight" id="ar-toggle-highlight"></div>
-                <div class="ar-toggle-divider"></div>
-                <div class="ar-toggle-side active" data-side="current" data-role="label-current">
-                  <span class="arrow">◀</span>현재
-                </div>
-                <div class="ar-toggle-side" data-side="past" data-role="label-past">
-                  복원<span class="arrow">▶</span>
-                </div>
+                <span class="ar-toggle-label active" data-role="label-current">현재</span>
+                <div class="ar-toggle-track"></div>
+                <div class="ar-toggle-thumb" id="ar-toggle-thumb"><span class="arrow">▶</span></div>
+                <span class="ar-toggle-label" data-role="label-past">복원</span>
               </div>
               <div class="ai-row">
                 <div class="avatar">🧭</div>
@@ -1202,14 +1199,10 @@
 
             <div class="ai-assist ar-ai-assist" id="ar-ai-assist-2">
               <div class="ar-toggle" id="ar-toggle-2" role="slider" aria-label="현재/복원 전환" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
-                <div class="ar-toggle-highlight" id="ar-toggle-highlight-2"></div>
-                <div class="ar-toggle-divider"></div>
-                <div class="ar-toggle-side active" data-side="current" data-role="label-current">
-                  <span class="arrow">◀</span>현재
-                </div>
-                <div class="ar-toggle-side" data-side="past" data-role="label-past">
-                  복원<span class="arrow">▶</span>
-                </div>
+                <span class="ar-toggle-label active" data-role="label-current">현재</span>
+                <div class="ar-toggle-track"></div>
+                <div class="ar-toggle-thumb" id="ar-toggle-thumb-2"><span class="arrow">▶</span></div>
+                <span class="ar-toggle-label" data-role="label-past">복원</span>
               </div>
               <div class="ai-row">
                 <div class="avatar">🧭</div>
@@ -1313,7 +1306,7 @@
     function makeArController(scope) {
       const panel = document.getElementById(scope.panel);
       const toggle = document.getElementById(scope.toggle);
-      const highlight = document.getElementById(scope.highlight);
+      const thumb = document.getElementById(scope.thumb);
       const currentView = document.getElementById(scope.currentView);
       const pastView = document.getElementById(scope.pastView);
       const btnBack = document.getElementById(scope.btnBack);
@@ -1321,14 +1314,23 @@
       let isPast = false;
       let isDragging = false;
 
+      function updateLabels() {
+        toggle.querySelectorAll("[data-role]").forEach((label) => {
+          const isCurrent = label.getAttribute("data-role") === "label-current";
+          label.classList.toggle("active", isPast ? !isCurrent : isCurrent);
+        });
+      }
+
+      function setThumb(pct) {
+        const track = toggle.querySelector(".ar-toggle-track");
+        const tw = track.getBoundingClientRect().width;
+        const left = 52 + pct * tw;
+        thumb.style.left = left + "px";
+      }
+
       function setView(past) {
         isPast = past;
-        // 사이드(현재/복원) 라벨 + 하이라이트 상태
-        toggle.querySelectorAll("[data-role]").forEach((side) => {
-          const isCurrent = side.getAttribute("data-role") === "label-current";
-          side.classList.toggle("active", past ? !isCurrent : isCurrent);
-        });
-        if (highlight) highlight.classList.toggle("past", past);
+        updateLabels();
         if (past) {
           currentView.style.opacity = "0";
           currentView.style.transform = "translateX(-20px)";
@@ -1337,6 +1339,7 @@
           pastView.style.transform = "translateX(0)";
           pastView.style.pointerEvents = "auto";
           toggle.setAttribute("aria-valuenow", "100");
+          setThumb(1);
         } else {
           currentView.style.opacity = "1";
           currentView.style.transform = "translateX(0)";
@@ -1345,6 +1348,7 @@
           pastView.style.transform = "translateX(20px)";
           pastView.style.pointerEvents = "none";
           toggle.setAttribute("aria-valuenow", "0");
+          setThumb(0);
         }
       }
 
@@ -1371,17 +1375,12 @@
       if (btnBack) btnBack.addEventListener("click", () => hidePanel(scope.panel));
 
       if (toggle) {
-        // 사이드(현재/복원) 클릭 시 해당 상태로 직접 전환
-        toggle.querySelectorAll("[data-role]").forEach((side) => {
-          side.addEventListener("click", () => {
-            const toPast = side.getAttribute("data-role") === "label-past";
+        // 라벨(현재/복원) 클릭 시 해당 상태로 전환
+        toggle.querySelectorAll("[data-role]").forEach((label) => {
+          label.addEventListener("click", () => {
+            const toPast = label.getAttribute("data-role") === "label-past";
             setView(toPast);
           });
-        });
-        // 빈 영역 클릭 시 반대 상태로 토글
-        toggle.addEventListener("click", (e) => {
-          if (e.target.closest("[data-role]")) return;
-          toggleView();
         });
         toggle.addEventListener("keydown", (e) => {
           if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
@@ -1389,6 +1388,34 @@
             toggleView();
           }
         });
+      }
+      // 드래그 슬라이더: thumb 위치 따라 현재/복원 전환
+      if (thumb) {
+        function thumbPct(clientX) {
+          const track = toggle.querySelector(".ar-toggle-track");
+          const tr = track.getBoundingClientRect();
+          return Math.max(0, Math.min(1, (clientX - tr.left) / tr.width));
+        }
+        thumb.addEventListener("pointerdown", (e) => {
+          isDragging = true;
+          thumb.classList.add("dragging");
+          thumb.setPointerCapture && thumb.setPointerCapture(e.pointerId);
+          e.preventDefault();
+        });
+        thumb.addEventListener("pointermove", (e) => {
+          if (!isDragging) return;
+          const pct = thumbPct(e.clientX);
+          setThumb(pct);
+          if (pct > 0.5 && !isPast) setView(true);
+          else if (pct <= 0.5 && isPast) setView(false);
+        });
+        const stopDrag = () => {
+          if (!isDragging) return;
+          isDragging = false;
+          thumb.classList.remove("dragging");
+        };
+        thumb.addEventListener("pointerup", stopDrag);
+        thumb.addEventListener("pointercancel", stopDrag);
       }
 
       setView(false);
@@ -1529,7 +1556,7 @@
       btnStart: "btn-ar-start",
       btnBack: "btn-ar-back",
       toggle: "ar-toggle",
-      highlight: "ar-toggle-highlight",
+      thumb: "ar-toggle-thumb",
       currentView: "ar-current",
       pastView: "ar-past",
       chip: "ar-chip-label",
@@ -1546,7 +1573,7 @@
       btnStart: "btn-ar-start-2",
       btnBack: "btn-ar-back-2",
       toggle: "ar-toggle-2",
-      highlight: "ar-toggle-highlight-2",
+      thumb: "ar-toggle-thumb-2",
       currentView: "ar-current-2",
       pastView: "ar-past-2",
       chip: "ar-chip-label-2",
