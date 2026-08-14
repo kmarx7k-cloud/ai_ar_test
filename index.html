@@ -778,7 +778,7 @@
     .past-label{
       position:absolute;
       left:50%;
-      bottom:500px;
+      bottom:280px;
       transform:translateX(-50%);
       padding:4px 10px;
       border-radius:999px;
@@ -794,7 +794,7 @@
       position:absolute;
       left:20px;
       right:20px;
-      bottom:420px;
+      bottom:220px;
       z-index:10;
       height:44px;
     }
@@ -838,7 +838,7 @@
     .ar-shutter{
       position:absolute;
       left:50%;
-      bottom:320px;
+      bottom:150px;
       transform:translateX(-50%);
       z-index:10;
     }
@@ -867,15 +867,26 @@
       border-radius:20px 20px 0 0;
       border:none;
       border-top:1px solid var(--border);
-      background:linear-gradient(180deg,rgba(243,244,245,0) 0%,var(--surface) 20%);
-      padding:16px 20px 34px;
+      background:var(--surface);
+      padding:12px 16px 16px;
       box-shadow:0 -8px 24px rgba(28,28,30,.08);
     }
-    .ar-ai-assist .ai-row{margin-bottom:10px}
-    .ar-ai-assist p{font-size:11px; line-height:1.65; color:#444}
+    .ar-ai-assist .ai-row{margin-bottom:8px}
+    .ar-ai-assist .avatar{
+      width:32px;
+      height:32px;
+    }
+    .ar-ai-assist p{
+      font-size:11px; line-height:1.55; color:#444;
+      display:-webkit-box;
+      -webkit-line-clamp:3;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+      margin:0 0 10px;
+    }
     .ar-ai-assist .ask{
       width:100%;
-      height:44px;
+      height:38px;
       border-radius:12px;
       font-size:11px;
     }
@@ -1011,7 +1022,7 @@
                 </div>
                 <div class="ar-past" id="ar-past">
                   <img src="images/img_seochon_bluehouse_walk.png" id="ar-past-img" alt="과거 모습" />
-                  <div class="ghost" style="left:54px; right:54px; bottom:540px; height:128px;"></div>
+                  <div class="ghost" style="left:54px; right:54px; bottom:280px; height:128px;"></div>
                   <div class="past-label">복원된 모습</div>
                 </div>
               </div>
@@ -1186,7 +1197,7 @@
                 </div>
                 <div class="ar-past" id="ar-past-2">
                   <img src="images/img_hanyangdoseong_naksan.jpg" id="ar-past-img-2" alt="복원 모습" />
-                  <div class="ghost" style="left:54px; right:54px; bottom:540px; height:128px;"></div>
+                  <div class="ghost" style="left:54px; right:54px; bottom:280px; height:128px;"></div>
                   <div class="past-label">복원된 돈의문</div>
                 </div>
               </div>
